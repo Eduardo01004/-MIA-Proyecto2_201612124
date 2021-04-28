@@ -1,7 +1,127 @@
 import React, { Component } from 'react'
 import {  BrowserRouter as Router, Switch, Route, Link } from 'react-router-dom';
+import axios from 'axios';
+import Swal from "sweetalert2";
+import { browserHistory } from 'react-router';
+import { useHistory } from "react-router-dom";
+import { withRouter } from "react-router";
+import InicioAdmin from './InicioAdmin';
 
 export default class Login extends Component {
+  
+  Toast = Swal.mixin({
+    toast: true,
+    position: "top-end",
+    showConfirmButton: false,
+    timer: 3000,
+    timerProgressBar: true,
+    didOpen: (toast) => {
+      toast.addEventListener("mouseenter", Swal.stopTimer);
+      toast.addEventListener("mouseleave", Swal.resumeTimer);
+    },
+  });
+
+  state = {
+    username: '',
+    contra: '',
+  }
+
+  onChangeUsername1 = (e) => {
+    this.setState({
+        username: e.target.value
+    })
+
+  }
+
+onChangeContra1 = (e) => {
+  this.setState({
+      contra: e.target.value
+  })
+
+}
+
+onSubmit = async e =>{
+  e.preventDefault();
+    const res = await fetch('http://localhost:3030/login',{
+      
+      method: "POST",
+    headers: {
+      Accept: "application/json",
+      "Content-Type": "application/json",
+    },body: JSON.stringify({
+      username:this.state.username,
+      contra: this.state.contra,
+    }),
+      
+    });
+
+    if (res.status === 200){
+      const respuesta = await res.json();
+      console.log(respuesta.username)
+      Swal.fire({
+        icon: "success",
+        title: `¡Bienvenid@ ${this.state.username}!`,
+      });
+      if (respuesta.username == "admin"){
+        this.props.history.push('/iniAd');
+      }else {
+        this.props.history.push('/carga');
+      }
+      
+
+    }else if (res.status === 500){
+      Swal.fire({
+        icon: "error",
+        title: `Credenciales invalidas`,
+      });
+  }else {
+    Swal.fire({
+      icon: "error",
+      title: `No se pudo Iniciar sesion`,
+    });
+
+  }
+  
+
+  /*const headers = {'Content-Type': 'application/json',
+  'Access-Control-Allow-Origin' : '*',
+  'Access-Control-Allow-Methods':'GET,PUT,POST,DELETE,PATCH,OPTIONS',};
+  const resp = await axios.post(
+      'http://localhost:3030/login',
+      {
+      username:this.state.username,
+      contra: this.state.contra,
+      },
+      
+  {headers}
+  
+  ).then(response => {
+    console.log(response.data)
+    if (response.data = "logged in"){
+      console.log("Success ========>", response.data);
+
+      Swal.fire({
+        icon: "success",
+        title: `¡Bienvenid@ ${this.state.username}!`,
+      });
+
+    }else if (response.data ==  "USERNAME not found" ){
+      Swal.fire({
+        icon: "error",
+        title: `Credenciales invalidas`,
+      });
+    }
+      
+  })
+  .catch(error => {
+      console.log("Error ========>", error);
+      Swal.fire({
+        icon: "error",
+        title: `No se pudo iniciar sesion`,
+      });
+  }
+  )*/
+}
     render() {
         return (
             <div className="App">
@@ -20,17 +140,17 @@ export default class Login extends Component {
           </div>
         </div>
       </nav>
-            <form>
+            <form onSubmit={this.onSubmit}>
             <h3>Sign In</h3>
 
             <div className="form-group">
-                <label>Email address</label>
-                <input type="email" className="form-control" placeholder="Enter email" />
+                <label>Username</label>
+                <input type="text" className="form-control" placeholder="Enter username" onChange={this.onChangeUsername1}/>
             </div>
 
             <div className="form-group">
                 <label>Password</label>
-                <input type="password" className="form-control" placeholder="Enter password" />
+                <input type="password" className="form-control" placeholder="Enter password" onChange={this.onChangeContra1}/>
             </div>
 
             <div className="form-group">
@@ -41,8 +161,9 @@ export default class Login extends Component {
             </div>
 
             <button type="submit" className="btn btn-primary btn-block">Submit</button>
+
             <p className="forgot-password text-right">
-                Forgot <a href="#">password?</a>
+                Forgot <a href="/iniAd">password?</a>
             </p>
         </form>
         </div>
