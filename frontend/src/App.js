@@ -5,6 +5,8 @@ import './App.css';
 import CreateUser from './Componentes/CrearUsuario';
 import InicioAdmin from './Componentes/InicioAdmin';
 import Carga from './Componentes/Carga';
+import InicioUser from './Componentes/InicioUser';
+import Perfil from './Componentes/Perfil';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import {  BrowserRouter as Router, Switch, Route, Link } from 'react-router-dom';
 function App() {
@@ -21,6 +23,8 @@ function App() {
             <Route path="/sign-up" component={CreateUser} />
             <Route path="/iniAd" component={InicioAdmin} />
             <Route path="/carga" component={Carga} />
+            <Route path="/iniUs" component={InicioUser} />
+            <Route path="/perfil" component={Perfil} />
           </Switch>
         </div>
       </div>

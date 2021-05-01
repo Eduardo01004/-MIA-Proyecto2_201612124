@@ -2,11 +2,13 @@ package main
 
 import (
 	"database/sql"
+	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"log"
 	"net/http"
+	"os"
 
 	"github.com/gorilla/mux"
 	_ "github.com/mattn/go-oci8"
@@ -25,12 +27,16 @@ type prueba struct {
 type login struct {
 	Username string `json:"username"`
 	Contra   string `json:"contra"`
+	Base     string `json:"base64"`
 }
 
 type Curso struct {
 	Nombre      string `json:"nombre"`
 	Descripcion string `json:"desc"`
 	Auxiliar    string `json:"aux"`
+}
+type Imagen struct {
+	Base string `json:"base64"`
 }
 
 type Usuario struct {
@@ -39,10 +45,26 @@ type Usuario struct {
 	Nombre            string `json:"nombre"`
 	Apellido          string `json:"apellido"`
 	Tier              int    `json:"tier"`
-	Fecha_naciemiento string `json:"fecha_nacimiento"`
+	Fecha_naciemiento string `json:"fecha_naciemiento"`
 	Fecha_registro    string `json:"fecha_registro"`
 	Correo            string `json:"correo"`
 	Foto              string `json:"foto"`
+	Base              string `json:"base64"`
+}
+type User struct {
+	Username string `json:"username"`
+}
+type Retorno struct {
+	Username          string `json:"username"`
+	Contra            string `json:"contra"`
+	Nombre            string `json:"nombre"`
+	Apellido          string `json:"apellido"`
+	Tier              int    `json:"tier"`
+	Fecha_naciemiento string `json:"fecha_naciemiento"`
+	Fecha_registro    string `json:"fecha_registro"`
+	Correo            string `json:"correo"`
+	Foto              string `json:"foto"`
+	Base              string `json:"base"`
 }
 
 type Lista struct {
@@ -77,52 +99,83 @@ type Lista struct {
 
 // to simulate a database
 var Cursos []Curso
+var imagen string
 
+func CrearImagen(w http.ResponseWriter, r *http.Request) {
+	var img Imagen
+	reqBody, _ := ioutil.ReadAll(r.Body)
+	json.Unmarshal(reqBody, &img)
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+	w.WriteHeader(http.StatusOK)
+	w.Write([]byte(img.Base))
+	dec, err := base64.StdEncoding.DecodeString(img.Base)
+	if err != nil {
+		panic(err)
+	}
+
+	f, err := os.Create("imagenes/" + "caca")
+	if err != nil {
+		panic(err)
+	}
+	defer f.Close()
+
+	if _, err := f.Write(dec); err != nil {
+		panic(err)
+	}
+	if err := f.Sync(); err != nil {
+		panic(err)
+	}
+
+}
 func Crear_Usuario(w http.ResponseWriter, r *http.Request) {
-	db, err := sql.Open("oci8", "TEST/1234@localhost:1521/ORCL18")
-	if err != nil {
-		log.Fatal(err)
-	}
-	defer db.Close()
-	res, err := db.Exec("insert into Usuario(username,contra,nombre,apellido,tiers,fecha_naciemiento,fecha_registro,correo,foto) values(:1, :2,:3,:4,:5,:6,:7,:8,:9)", "Eduardo21", "caca1234", "Eduardo", "Tun", "gold", "10/10/10", "15/15/15", "eduardotun27565@gmail.com", "scasd")
-	if err != nil {
-		fmt.Println(err)
-		return
-	}
-	fmt.Println(res.LastInsertId())
 
 }
 
 func pruebapost(w http.ResponseWriter, r *http.Request) {
 	var pruebita Usuario
-	//var loginprueba login
-	// we will need to extract the `id` of the article we
-	// wish to delete
 	reqBody, _ := ioutil.ReadAll(r.Body)
 
-	//---el body lo vuelvo un struct para acceder a sus atributos
 	json.Unmarshal(reqBody, &pruebita)
-	//println(pruebita.Username)
-	//println(pruebita.Contra)
+
 	w.Header().Set("Access-Control-Allow-Origin", "*")
 	w.Header().Set("Access-Control-Allow-Methods", "POST, GET, OPTIONS, PUT, DELETE")
 	w.Header().Set("Access-Control-Allow-Headers", "Accept, Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token, Authorization")
 	w.WriteHeader(http.StatusOK)
-	w.Write([]byte(pruebita.Username)) //----devuelvo el username en el response del POST
-	fmt.Println("entro en el crear")
+	//w.Write([]byte(pruebita.Base)) //----devuelvo el username en el response del POST
 	db, err := sql.Open("oci8", "TEST/1234@localhost:1521/ORCL18")
 	if err != nil {
 		log.Fatal(err)
 	}
 	defer db.Close()
 
-	res, err := db.Exec("insert into Usuario(username,contra,nombre,apellido,tiers,fecha_naciemiento,fecha_registro,correo,foto,tipo) values(:1, :2,:3,:4,:5,:6,:7,:8,:9,:10)", pruebita.Username, pruebita.Contra, pruebita.Nombre, pruebita.Apellido, pruebita.Tier, pruebita.Fecha_naciemiento, pruebita.Fecha_registro, pruebita.Correo, "asdfs", 1)
+	res, err := db.Exec("insert into Usuario(username,contra,nombre,apellido,tiers,fecha_naciemiento,fecha_registro,correo,foto,tipo) values(:1, :2,:3,:4,:5,:6,:7,:8,:9,:10)", pruebita.Username, pruebita.Contra, pruebita.Nombre, pruebita.Apellido, pruebita.Tier, pruebita.Fecha_naciemiento, pruebita.Fecha_registro, pruebita.Correo, pruebita.Foto, 1)
 	if err != nil {
 		fmt.Println(err)
 		return
 	}
 	fmt.Println(res.LastInsertId())
+	w.Write([]byte(pruebita.Base))
+	dec, err := base64.StdEncoding.DecodeString(pruebita.Base)
+	if err != nil {
+		panic(err)
+	}
+	f, err := os.Create("imagenes/" + pruebita.Username)
+	if err != nil {
+		panic(err)
+	}
+	defer f.Close()
 
+	if _, err := f.Write(dec); err != nil {
+		panic(err)
+	}
+	if err := f.Sync(); err != nil {
+		panic(err)
+	}
+
+}
+
+func toBase64(b []byte) string {
+	return base64.StdEncoding.EncodeToString(b)
 }
 
 func Login(w http.ResponseWriter, r *http.Request) {
@@ -140,47 +193,30 @@ func Login(w http.ResponseWriter, r *http.Request) {
 	defer db.Close()
 	var id string
 	var pass string
+	var foto string
 	var err2 error
-	err2 = db.QueryRow(" select username, contra from Usuario where username = "+"'"+logu.Username+"'").Scan(&id, &pass)
+	err2 = db.QueryRow(" select username, contra,foto from Usuario where username = "+"'"+logu.Username+"'").Scan(&id, &pass, &foto)
 	if err2 != nil {
 		http.Error(w, err2.Error(), http.StatusInternalServerError)
 		return
 	}
+	bytes, err := ioutil.ReadFile(foto)
+	if err != nil {
+		log.Fatal(err)
+	}
+	var base64Encoding string
+
+	// Append the base64 encoded output
+	base64Encoding += toBase64(bytes)
+
+	// Print the full base64 representation of the image
+	//fmt.Println("esto es la codificacion:" + base64Encoding)
+	logu.Contra = pass
+	logu.Base = base64Encoding
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 	json.NewEncoder(w).Encode(logu)
-	/*println(id)
-	println(pass)
-	if id == "admin" {
-		if pass == "admin" {
-			var resp = map[string]interface{}{"message": "logged in"}
-			json.NewEncoder(w).Encode(resp)
-		} else {
-			var resp = map[string]interface{}{"message": "Wrong Password"}
-			json.NewEncoder(w).Encode(resp)
 
-		}
-
-	} else if id == logu.Username {
-		if pass == logu.Contra {
-			var resp = map[string]interface{}{"message": "logged in"}
-			json.NewEncoder(w).Encode(resp)
-		} else {
-			var resp = map[string]interface{}{"message": "Wrong Password"}
-			json.NewEncoder(w).Encode(resp)
-		}
-
-	} else {
-		println("el usuario no existe")
-		var resp = map[string]interface{}{"message": "USERNAME not found"}
-		json.NewEncoder(w).Encode(resp)
-	}*/
-}
-
-func pruebaget(w http.ResponseWriter, r *http.Request) {
-
-	fmt.Println("Endpoint Hit: Devuelvo todos los cursos")
-	json.NewEncoder(w).Encode(Cursos)
 }
 
 func getUsers(w http.ResponseWriter, r *http.Request) {
@@ -189,20 +225,64 @@ func getUsers(w http.ResponseWriter, r *http.Request) {
 		log.Fatal(err)
 	}
 	defer db.Close()
-	fmt.Println("si entra en el metodo")
 
-	rows2, err2 := db.Query("SELECT username from Usuario")
+	rows2, err2 := db.Query("select *from Usuario")
 	if err2 != nil {
 		log.Fatal("Error fetching user data\n", err)
 	}
 	defer rows2.Close()
-	fmt.Println(rows2)
-
 	for rows2.Next() {
 		var nombre string
+		var contra string
 		rows2.Scan(&nombre)
+		rows2.Scan(&contra)
 		fmt.Println("Usuario " + nombre)
+		fmt.Println("contra " + contra)
 	}
+
+}
+
+func ObtenerUsuario(w http.ResponseWriter, r *http.Request) {
+	var u User
+	var ret Retorno
+	reqBody, _ := ioutil.ReadAll(r.Body)
+	json.Unmarshal(reqBody, &u)
+
+	db, err := sql.Open("oci8", "TEST/1234@localhost:1521/ORCL18")
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer db.Close()
+	var id int
+	var username string
+	var pass string
+	var name string
+	var apellido string
+	var tier int
+	var fechaNac string
+	var fechaReg string
+	var correo string
+	var foto string
+	var tipo string
+	var err2 error
+	err2 = db.QueryRow(" select  *from Usuario where username = "+"'"+u.Username+"'").Scan(&id, &username, &pass, &name, &apellido, &tier, &fechaNac, &fechaReg, &correo, &foto, &tipo)
+
+	if err2 != nil {
+		http.Error(w, err2.Error(), http.StatusInternalServerError)
+		return
+	}
+	w.Header().Set("Content-Type", "application/json")
+	ret.Username = username
+	ret.Contra = pass
+	ret.Nombre = name
+	ret.Apellido = apellido
+	ret.Tier = tier
+	ret.Fecha_naciemiento = fechaNac
+	ret.Fecha_registro = fechaReg
+	ret.Correo = correo
+	ret.Foto = foto
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(ret)
 
 }
 
@@ -220,12 +300,12 @@ func CargaMasiva(w http.ResponseWriter, r *http.Request) {
 }
 func main() {
 	router := mux.NewRouter().StrictSlash(true)
-	router.HandleFunc("/createuser", Crear_Usuario).Methods("POST")
 	router.HandleFunc("/pruebapost", pruebapost).Methods("POST")
-	router.HandleFunc("/pruebaget", pruebaget).Methods("GET")
 	router.HandleFunc("/getuser", getUsers).Methods("GET")
 	router.HandleFunc("/login", Login).Methods("POST")
 	router.HandleFunc("/carga", CargaMasiva).Methods("POST")
+	router.HandleFunc("/image", CrearImagen).Methods("POST")
+	router.HandleFunc("/obU", ObtenerUsuario).Methods("POST")
 	fmt.Println("Esta funcionando")
 
 	log.Fatal(http.ListenAndServe(":3030", router)) //log.fatal como que lo mantiene a la escucha y permite pararlo

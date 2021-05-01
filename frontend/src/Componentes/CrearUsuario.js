@@ -3,26 +3,28 @@ import {  BrowserRouter as Router, Switch, Route, Link } from 'react-router-dom'
 import axios from 'axios';
 import Swal from "sweetalert2";
 import "base-64";
+import { base64StringToBlob } from 'blob-util';
 
 export default class CrearUsuario extends Component {
-    url_api = "http://localhost:3030/pruebapost";
     state = {
         username: '',
         contra: '',
         nombre: '',
         apellido: '',
-        tiers: '',
+        tier: '',
         fecha_naciemiento: '',
         fecha_registro: '',
         correo: '',
         foto: '',
-        tipo: 1
+        tipo: 1,
+        base64: ''
  
     }
-    
+
     onChangeUsername = (e) => {
         this.setState({
-            username: e.target.value
+            username: e.target.value,
+            foto: "imagenes/"+e.target.value
         })
 
     }
@@ -46,7 +48,7 @@ export default class CrearUsuario extends Component {
     }
     onChangeTier = (e) => {
         this.setState({
-            tiers: e.target.value
+            tier: parseInt(e.target.value)
         })
 
     }
@@ -56,20 +58,49 @@ export default class CrearUsuario extends Component {
         })
 
     }
-    onChangeFechaReg = (e) => {
+    /*onChangeFechaReg = (e) => {
         this.setState({
             fecha_registro: e.target.value
-        })
+        }) }
 
-    }
+    }*/
     onChangeEmail = (e) => {
         this.setState({
             correo: e.target.value
         })
 
     }
+     openFile = (evt) =>{ 
+        const file = evt.target.files[0]
+        const base64 =  this.Base64(file)
+                   
+    };
+
+     Base64 = (file) => {
+      return new Promise((resolve,reject) => {
+          const fileReader = new FileReader();
+          fileReader.readAsDataURL(file);
+          fileReader.onload = () =>{
+            resolve(fileReader.result);
+            let s = fileReader.result
+            let p = s.split(',')
+            this.setState({
+                base64: p[1]
+                
+                
+            })
+                         
+          };
+          
+       return fileReader.result   
+ 
+      });
+    };
 
     onSubmit = async e =>{
+
+        const fecha = new Date();
+        const hoy = fecha.getDate();
         e.preventDefault();
         const headers = {'Content-Type': 'application/json',
         'Access-Control-Allow-Origin' : '*',
@@ -81,14 +112,21 @@ export default class CrearUsuario extends Component {
             contra: this.state.contra,
             nombre: this.state.nombre,
             apellido: this.state.apellido,
-            tiers:this.state.tiers,
+            tier:this.state.tier,
             fecha_naciemiento:this.state.fecha_naciemiento,
-            fecha_registro: this.state.fecha_registro,
+           
+            fecha_registro: fecha.getDate()+ "/" + (fecha.getMonth() + 1) + "/" + fecha.getFullYear(),
             correo: this.state.correo,
+            foto: this.state.foto,
+            base64:this.state.base64
             },
         {headers}
         ).then(response => {
             console.log("Success ========>", response);
+            Swal.fire({
+                icon: "success",
+                title: `Usuario Creado con Exito!`,
+              });
         })
         .catch(error => {
             console.log("Error ========>", error);
@@ -96,28 +134,7 @@ export default class CrearUsuario extends Component {
         )
 
     }
-    render() {
-        var openFile = function(evt) { 
-            console.log(evt.target.files)
-            
-            const base64 =  Base64(evt.target.files[0])
-            console.log(base64)
-        };
-        const  Base64 = (file) => {
-          return new Promise((resolve,reject) => {
-              const fileReader = new FileReader();
-              fileReader.readAsDataURL(file);
-              fileReader.onload = () =>{
-                resolve(fileReader.result);                  
-              };
-              
-              fileReader.onerror = (error) => {
-                  reject(error);
-                };
-
-          });
-        };
-        
+    render() { 
         return (
             <div className="App">
       <nav className="navbar navbar-expand-lg navbar-light fixed-top">
@@ -158,9 +175,7 @@ export default class CrearUsuario extends Component {
                 <div className="mb-3">
                     <input type="text" className="form-control form-control-sm"  placeholder="Fecha Nacimiento" onChange={this.onChangeFechaNac}/>
                 </div>
-                <div className="mb-3">
-                    <input type="text" className="form-control form-control-sm"  placeholder="Fecha Registro" onChange={this.onChangeFechaReg}/>
-                </div>
+               
 
                 <div className="mb-3" >
                     <input type="email" className="form-control form-control-sm" placeholder="Enter email" onChange={this.onChangeEmail} />
@@ -168,12 +183,10 @@ export default class CrearUsuario extends Component {
 
                 <div className="mb-3" >
                 <input 
-                type='file' 
+                type='file' file
                 name='Archivo' 
-                onChange= {evt => 
-                openFile(evt)}/>
+                onChange= {this.openFile}/>
                 </div>
-
                 <button type="submit" className="btn btn-primary btn-block">Sign Up</button>
                 <p className="forgot-password text-right">
                     Already registered <a href="/sign-in">sign in?</a>

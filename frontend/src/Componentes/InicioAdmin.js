@@ -8,9 +8,11 @@ import Plata from './images/plata.jpeg';
 import bronce from './images/bronce.png';
 import {Card, CardText, CardBody, CardTitle, CardSubtitle, CardImg,CardGroup,CardFooter} from 'reactstrap';
 export default class InicioAdmin extends Component {
-
+    
     render(){
+      
         return (
+          
             <div className="App">
             <nav className="navbar navbar-expand-lg navbar-light fixed-top">
               <div className="container">
@@ -75,11 +77,11 @@ export default class InicioAdmin extends Component {
                 </CardFooter>
             </Card>
             </CardGroup>
-            <div class="row g-2">
-    <div class="col-md">
-        <div class="form-floating">
-        <input type="text" class="form-control" id="floatingInputGrid" placeholder="TOTAL RECAUDADO" value="RECAUDADO" />
-        <label for="floatingInputGrid">25000</label>
+            <div className="row g-2">
+    <div className="col-md">
+        <div className="form-floating">
+        <input type="text" className="form-control" placeholder="TOTAL RECAUDADO" defaultValue="RECAUDADO" />
+        <label >25000</label>
         </div>
     </div>
     </div>

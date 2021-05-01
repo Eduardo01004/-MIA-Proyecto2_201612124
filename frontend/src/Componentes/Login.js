@@ -54,10 +54,20 @@ onSubmit = async e =>{
     }),
       
     });
-
+    
     if (res.status === 200){
       const respuesta = await res.json();
-      console.log(respuesta.username)
+      //console.log(respuesta.username)
+      localStorage.setItem(
+        "usuarioActual",
+        JSON.stringify({
+          username: respuesta.username,
+          contra: respuesta.contra,
+          base64: respuesta.base64
+          
+        })
+      );
+      //console.log(localStorage.getItem("usuarioActual"));
       Swal.fire({
         icon: "success",
         title: `¡Bienvenid@ ${this.state.username}!`,
@@ -65,10 +75,9 @@ onSubmit = async e =>{
       if (respuesta.username == "admin"){
         this.props.history.push('/iniAd');
       }else {
-        this.props.history.push('/carga');
+        this.props.history.push('/iniUs');
       }
       
-
     }else if (res.status === 500){
       Swal.fire({
         icon: "error",
@@ -81,46 +90,6 @@ onSubmit = async e =>{
     });
 
   }
-  
-
-  /*const headers = {'Content-Type': 'application/json',
-  'Access-Control-Allow-Origin' : '*',
-  'Access-Control-Allow-Methods':'GET,PUT,POST,DELETE,PATCH,OPTIONS',};
-  const resp = await axios.post(
-      'http://localhost:3030/login',
-      {
-      username:this.state.username,
-      contra: this.state.contra,
-      },
-      
-  {headers}
-  
-  ).then(response => {
-    console.log(response.data)
-    if (response.data = "logged in"){
-      console.log("Success ========>", response.data);
-
-      Swal.fire({
-        icon: "success",
-        title: `¡Bienvenid@ ${this.state.username}!`,
-      });
-
-    }else if (response.data ==  "USERNAME not found" ){
-      Swal.fire({
-        icon: "error",
-        title: `Credenciales invalidas`,
-      });
-    }
-      
-  })
-  .catch(error => {
-      console.log("Error ========>", error);
-      Swal.fire({
-        icon: "error",
-        title: `No se pudo iniciar sesion`,
-      });
-  }
-  )*/
 }
     render() {
         return (
@@ -163,7 +132,7 @@ onSubmit = async e =>{
             <button type="submit" className="btn btn-primary btn-block">Submit</button>
 
             <p className="forgot-password text-right">
-                Forgot <a href="/iniAd">password?</a>
+                Forgot <a href="/perfil">password?</a>
             </p>
         </form>
         </div>
