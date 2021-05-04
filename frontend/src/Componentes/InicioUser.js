@@ -1,9 +1,7 @@
 import React, { Component } from 'react'
-import {  BrowserRouter as Router, Switch, Route, Link } from 'react-router-dom';
-import axios from 'axios';
-import Swal from "sweetalert2";
+import {  Link } from 'react-router-dom';
+
 import "base-64";
-import { base64StringToBlob } from 'blob-util';
 
 export default class CrearUsuario extends Component {
     render(){

@@ -1,11 +1,7 @@
 import React, { Component } from 'react'
-import {  BrowserRouter as Router, Switch, Route, Link } from 'react-router-dom';
-import axios from 'axios';
+import {  Link } from 'react-router-dom';
 import Swal from "sweetalert2";
-import { browserHistory } from 'react-router';
-import { useHistory } from "react-router-dom";
-import { withRouter } from "react-router";
-import InicioAdmin from './InicioAdmin';
+
 
 export default class Login extends Component {
   
@@ -55,7 +51,7 @@ onSubmit = async e =>{
       
     });
     
-    if (res.status === 200){
+    if (Number(res.status) === 200){
       const respuesta = await res.json();
       //console.log(respuesta.username)
       localStorage.setItem(
@@ -78,7 +74,7 @@ onSubmit = async e =>{
         this.props.history.push('/iniUs');
       }
       
-    }else if (res.status === 500){
+    }else if (Number(res.status) === 500){
       Swal.fire({
         icon: "error",
         title: `Credenciales invalidas`,
@@ -92,6 +88,7 @@ onSubmit = async e =>{
   }
 }
     render() {
+      localStorage.clear();
         return (
             <div className="App">
       <nav className="navbar navbar-expand-lg navbar-light fixed-top">

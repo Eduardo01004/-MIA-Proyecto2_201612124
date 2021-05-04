@@ -1,12 +1,11 @@
 import React, { Component } from 'react'
-import {  BrowserRouter as Router, Switch, Route, Link } from 'react-router-dom';
-import axios from 'axios';
+import {  Link } from 'react-router-dom';
 import 'bootstrap/dist/css/bootstrap.min.css';
 //import Card from 'react-bootstrap/Card';
 import Oro from './images/gold.png';
 import Plata from './images/plata.jpeg';
 import bronce from './images/bronce.png';
-import {Card, CardText, CardBody, CardTitle, CardSubtitle, CardImg,CardGroup,CardFooter} from 'reactstrap';
+import {Card, CardText, CardBody, CardTitle, CardImg,CardGroup,CardFooter} from 'reactstrap';
 export default class InicioAdmin extends Component {
     
     render(){

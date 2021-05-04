@@ -1,9 +1,9 @@
 import React, { Component } from 'react'
-import {  BrowserRouter as Router, Switch, Route, Link } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import axios from 'axios';
 import Swal from "sweetalert2";
 import "base-64";
-import { base64StringToBlob } from 'blob-util';
+
 
 export default class CrearUsuario extends Component {
     state = {
@@ -58,12 +58,6 @@ export default class CrearUsuario extends Component {
         })
 
     }
-    /*onChangeFechaReg = (e) => {
-        this.setState({
-            fecha_registro: e.target.value
-        }) }
-
-    }*/
     onChangeEmail = (e) => {
         this.setState({
             correo: e.target.value
@@ -100,7 +94,6 @@ export default class CrearUsuario extends Component {
     onSubmit = async e =>{
 
         const fecha = new Date();
-        const hoy = fecha.getDate();
         e.preventDefault();
         const headers = {'Content-Type': 'application/json',
         'Access-Control-Allow-Origin' : '*',

@@ -1,12 +1,10 @@
 import React, { Component } from 'react'
-import {  BrowserRouter as Router, Switch, Route, Link } from 'react-router-dom';
+import {  Link } from 'react-router-dom';
 import axios from 'axios';
 import Swal from "sweetalert2";
-import "base-64";
-import { base64StringToBlob } from 'blob-util';
 import 'bootstrap/dist/css/bootstrap.min.css';
 //import Plata from '/home/eduardo/go/src/hola/imagenes/Eduardo21';
-import {Card, CardText, CardBody, CardTitle, CardSubtitle, CardImg,CardGroup,CardFooter} from 'reactstrap';
+import {Card, CardText, CardBody, CardImg} from 'reactstrap';
 
 
 export default class Perfil extends Component {
@@ -16,7 +14,7 @@ export default class Perfil extends Component {
           const headers = {'Content-Type': 'application/json',
           'Access-Control-Allow-Origin' : '*',
           'Access-Control-Allow-Methods':'GET,PUT,POST,DELETE,PATCH,OPTIONS',};
-        const  respuesta =  await axios.post(
+           await axios.post(
               'http://localhost:3030/obU',
               {
               username:tp.username,
@@ -38,16 +36,14 @@ export default class Perfil extends Component {
                 
    
             })
-            this.Contrasena = response.data.username
-              //console.log("respusta: " + cas.username)
+            
+            console.log("Succes ========>", response)
           })
           .catch(error => {
               console.log("Error ========>", error);
           }
           )
   }
-  Contrasena = '';
- //imageName = require('/home/eduardo/go/src/hola/imagenes/Eduardo21');
   state = {
     username: '',
     contra: '',
@@ -62,14 +58,107 @@ export default class Perfil extends Component {
     base64: ''
 
 }
-onSubmit = async e =>{
-     
-    }
+estado2 = {
+  username: '',
+  nombre: '',
+  apellido: '',
+  fecha_naciemiento: '',
+  correo: '',
+  foto: '',
+  base64: ''
+
+}
+  update = async e =>{
+    e.preventDefault();
+    const  tp =  JSON.parse(localStorage.getItem("usuarioActual"));
+          const headers = {'Content-Type': 'application/json',
+          'Access-Control-Allow-Origin' : '*',
+          'Access-Control-Allow-Methods':'GET,PUT,POST,DELETE,PATCH,OPTIONS',};
+          await axios.post(
+              'http://localhost:3030/update',
+              {
+              username:tp.username,
+              nombre: this.state.nombre,
+              apellido: this.state.apellido,
+              fecha_naciemiento:this.state.fecha_naciemiento,            
+              correo: this.state.correo,
+              foto: "imagenes/"+ tp.username,
+              base64:this.state.base64
+              },
+          {headers}
+          ).then(response => {
+            Swal.fire({
+              icon: "success",
+              title: `Usuario Modificado con Exito!`,
+            });
+            console.log("Succes ========>", response);
+
+          })
+          .catch(error => {
+              console.log("Error ========>", error);
+          }
+          )
+
+  }
+  onChangeName = (e) => {
+    this.setState({
+        nombre: e.target.value
+    })
+}
+
+onChangeLastname = (e) => {
+  this.setState({
+      apellido: e.target.value
+  })
+
+}
+onChangeFechaNac = (e) => {
+  this.setState({
+      fecha_naciemiento: e.target.value
+  })
+
+}
+onChangeEmail = (e) => {
+  this.setState({
+      correo: e.target.value
+  })
+
+}
+onChangeEmail = (e) => {
+  this.setState({
+      correo: e.target.value
+  })
+
+}
+openFile = (evt) =>{ 
+  const file = evt.target.files[0]
+  const base64 =  this.Base64(file)
+             
+};
+
+Base64 = (file) => {
+return new Promise((resolve,reject) => {
+    const fileReader = new FileReader();
+    fileReader.readAsDataURL(file);
+    fileReader.onload = () =>{
+      resolve(fileReader.result);
+      let s = fileReader.result
+      let p = s.split(',')
+      this.setState({
+          base64: p[1]    
+      })
+                   
+    };
+    
+ return fileReader.result   
+
+});
+};
     render(){
      
         return(
 
-
+          
             <div className="container-fluid">
                 <nav className="navbar navbar-expand-lg navbar-light fixed-top">
               <div className="container">
@@ -91,6 +180,9 @@ onSubmit = async e =>{
                     <li className="nav-item">
                       <Link className="nav-link" to={"/sign-up"}>Recompensas</Link>
                     </li>
+                    <li className="nav-item">
+                      <Link className="nav-link" to={"/sign-in"}>Cerrar Sesion</Link>
+                    </li>
                   </ul>
                 </div>
               </div>
@@ -106,7 +198,8 @@ onSubmit = async e =>{
                     <CardText>
                     <input 
                     type='file'
-                    name='Archivo' 
+                    name='Archivo'
+                    onChange= {this.openFile} 
                     />
                     </CardText>
                 </CardBody>
@@ -124,12 +217,12 @@ onSubmit = async e =>{
           </fieldset>
             <div className="mb-3">
             <label htmlFor="staticEmail" className="col-sm-2 col-form-label">Nombre</label>
-                <input type="text" className="form-control form-control-sm"  placeholder={this.state.nombre} />
+                <input type="text" className="form-control form-control-sm"  placeholder={this.state.nombre} onChange={this.onChangeName} />
             </div>
 
             <div className="mb-3">
             <label htmlFor="staticEmail" className="col-sm-2 col-form-label">Apellido</label>
-                <input type="text" className="form-control form-control-sm"  placeholder={this.state.apellido} />
+                <input type="text" className="form-control form-control-sm"  placeholder={this.state.apellido} onChange={this.onChangeLastname} />
             </div>
             <fieldset disabled>
             <div className="mb-3">
@@ -139,17 +232,17 @@ onSubmit = async e =>{
             </fieldset>
             <div className="mb-3">
             <label htmlFor="formGroupExampleInput">Fecha de Nacimiento</label>
-                <input type="text" className="form-control form-control-sm"  placeholder={this.state.fecha_naciemiento} />
+                <input type="text" className="form-control form-control-sm"  placeholder={this.state.fecha_naciemiento}  onChange={this.onChangeFechaNac} />
             </div>
             <div className="mb-3" >
             <label htmlFor="staticEmail" className="col-sm-2 col-form-label">Email</label>
-                <input type="email" className="form-control form-control-sm" placeholder={this.state.correo} />
+                <input type="email" className="form-control form-control-sm" placeholder={this.state.correo} onChange={this.onChangeEmail}/>
             </div>
 
             <div className="mb-3" >
             
             </div>
-            <button type="submit" className="btn btn-primary btn-block">Modificar</button>
+            <button type="submit" className="btn btn-primary btn-block" onClick={this.update}>Modificar</button>
             
             <button type="submit" className="btn btn-primary btn-block" onClick={this.handleClick}>Mostrar Datos</button>
             

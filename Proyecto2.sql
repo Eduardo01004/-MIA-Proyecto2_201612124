@@ -72,6 +72,8 @@ create table Recompensa(
 );
 
 select *from Usuario;
-select *from Usuario where username = 'Eduardo21';
+select *from Usuario where username = 'admin';
 insert into Usuario(username,contra,tipo) values('admin','admin',2);
+update Usuario set foto = 'imagenes/admin' wher username = 'admin';
+update Usuario set username = 'Raul', nombre = 'Afa',apellido='cac',fecha_naciemiento ='23-5-20',correo = 'popo@gmail.com',foto='imagenes/pene2' where username ='Pene';
 insert into Usuario(username,contra,nombre,apellido,tiers,fecha_naciemiento,fecha_registro,correo,foto,tipo) values('Eduardo19', 'caca1234', 'Eduardo', 'Tun', '3', '10/10/10', '5/15/15', 'eduardotun27@gmail.com', 'scasd','1');

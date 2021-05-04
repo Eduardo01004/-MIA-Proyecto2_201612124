@@ -1,25 +1,54 @@
 import React, { Component } from 'react'
-import {  BrowserRouter as Router, Switch, Route, Link } from 'react-router-dom';
+import {Link } from 'react-router-dom';
 import Swal from "sweetalert2";
+import axios from 'axios';
 export default class Carga extends Component {
+    
+  state = {
+    datos : ''
+
+  }
+  
+
+
+   openFile = (evt) =>{ 
+    const fileObj = evt.target.files[0];
+    const reader = new FileReader(); 
+    let fileloaded = e => {
+      this.setState({
+        datos: e.target.result
+
+      })
+      
+      
+
+    }
+    fileloaded = fileloaded.bind(this);
+    reader.onload = fileloaded;
+    reader.readAsText(fileObj);
+};
+ Enviar = async e =>{
+  const yaml = require('js-yaml')
+  const obj = yaml.load(this.state.datos)
+  var dato = JSON.stringify(obj, null, 2)
+  await axios.post('http://localhost:3030/carga', dato).then(
+      result => {
+          console.log("Se envio la informacion");
+          Swal.fire({
+            icon: "success",
+            title: `Se ha cargado con exito`,
+          });
+          //console.log(dato)
+      }
+  ).catch(console.log)
+}
+  
 
     render(){
-        var openFile = function(evt) { 
-            let status = [];
-            const fileObj = evt.target.files[0];
-            const reader = new FileReader(); 
-            let fileloaded = e => {
-              console.log(e.target.result)
-              Swal.fire({
-                icon: "success",
-                title: `Se ha cargado con exito`,
-              });
+      
+        
 
-            }
-            fileloaded = fileloaded.bind(this);
-            reader.onload = fileloaded;
-            reader.readAsText(fileObj);
-        };
+        
         return(
 
             <div className="App">
@@ -52,9 +81,11 @@ export default class Carga extends Component {
             </nav>
             <h1 className="h2">Carga Masiva</h1>
                 <br/><br/>
-                <input type='file' name='Archivo' onChange= {evt => openFile(evt)}/>
+                  <span>Choose file</span>
+                
+                <input type='file' name='Archivo' onChange= {this.openFile} />
                 <br/><br/>
-                <button className="btn btn-primary"  >Cargar Archivo</button>
+                <button className="btn btn-primary" onClick={this.Enviar}  >Cargar Archivo</button>
 
             </div>
         )
