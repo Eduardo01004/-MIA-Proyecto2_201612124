@@ -9,8 +9,6 @@ export default class Carga extends Component {
 
   }
   
-
-
    openFile = (evt) =>{ 
     const fileObj = evt.target.files[0];
     const reader = new FileReader(); 

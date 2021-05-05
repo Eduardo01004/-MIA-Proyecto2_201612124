@@ -53,7 +53,6 @@ onSubmit = async e =>{
     
     if (Number(res.status) === 200){
       const respuesta = await res.json();
-      //console.log(respuesta.username)
       localStorage.setItem(
         "usuarioActual",
         JSON.stringify({
@@ -63,7 +62,6 @@ onSubmit = async e =>{
           
         })
       );
-      //console.log(localStorage.getItem("usuarioActual"));
       Swal.fire({
         icon: "success",
         title: `¡Bienvenid@ ${this.state.username}!`,
@@ -129,7 +127,7 @@ onSubmit = async e =>{
             <button type="submit" className="btn btn-primary btn-block">Submit</button>
 
             <p className="forgot-password text-right">
-                Forgot <a href="/perfil">password?</a>
+                Forgot <a href="/forgot">password?</a>
             </p>
         </form>
         </div>

@@ -8,6 +8,7 @@ import Carga from './Componentes/Carga';
 import InicioUser from './Componentes/InicioUser';
 import Perfil from './Componentes/Perfil';
 import Forgot from './Componentes/ForgotPass';
+import Cambiar from './Componentes/CambiarPass';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import {  BrowserRouter as Router, Switch, Route} from 'react-router-dom';
 function App() {
@@ -27,6 +28,7 @@ function App() {
             <Route path="/iniUs" component={InicioUser} />
             <Route path="/perfil" component={Perfil} />
             <Route path="/forgot" component={Forgot} />
+            <Route path="/CambiarP" component={Cambiar} />
           </Switch>
         </div>
       </div>

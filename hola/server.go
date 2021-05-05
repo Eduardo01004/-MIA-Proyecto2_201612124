@@ -8,7 +8,9 @@ import (
 	"io/ioutil"
 	"log"
 	"net/http"
+	"net/smtp"
 	"os"
+	"time"
 
 	"github.com/gorilla/mux"
 	_ "github.com/mattn/go-oci8"
@@ -108,6 +110,16 @@ type Lista struct {
 	} `yaml:"A2"`
 }
 
+type Cpass struct {
+	Username string `json:"username"`
+	Correo   string `json:"correo"`
+}
+
+type passChage struct {
+	Username string `json:"username"`
+	Contra   string `json:"contra"`
+}
+
 /*--------------------------carga masiva---------------*/
 type Resultados struct {
 	Temporada string    `json:"temporada"`
@@ -202,6 +214,7 @@ func pruebapost(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	fmt.Println(res.LastInsertId())
+
 	w.Write([]byte(pruebita.Base))
 	dec, err := base64.StdEncoding.DecodeString(pruebita.Base)
 	if err != nil {
@@ -231,9 +244,6 @@ func Login(w http.ResponseWriter, r *http.Request) {
 	reqBody, _ := ioutil.ReadAll(r.Body)
 	json.Unmarshal(reqBody, &logu)
 
-	//w.WriteHeader(http.StatusOK)
-	//w.Write([]byte(logu.Username))
-
 	db, err := sql.Open("oci8", "TEST/1234@localhost:1521/ORCL18")
 	if err != nil {
 		log.Fatal(err)
@@ -248,14 +258,10 @@ func Login(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err2.Error(), http.StatusInternalServerError)
 		return
 	}
-	if foto == "" {
-		println("No hay una foto que enviar")
-
+	bytes, err := ioutil.ReadFile(foto)
+	if err != nil {
+		println("no se crea la imagen por que no hay")
 	} else {
-		bytes, err := ioutil.ReadFile(foto)
-		if err != nil {
-			log.Fatal(err)
-		}
 		var base64Encoding string
 
 		// Append the base64 encoded output
@@ -268,6 +274,7 @@ func Login(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusOK)
 		json.NewEncoder(w).Encode(logu)
+
 	}
 
 }
@@ -387,6 +394,66 @@ func UpdateUser(w http.ResponseWriter, r *http.Request) {
 
 }
 
+func EnviarEmail(body string, correo string) {
+	from := "quinielaapparchivos@gmail.com"
+	pass := "proyecto2archivos"
+	to := correo
+
+	msg := "From: " + from + "\n" +
+		"To: " + to + "\n" +
+		"Subject: Hello there\n\n" +
+		"ha  hecho una solicitud de un cambio de password " +
+		"con el siguiente link " +
+		body
+
+	err := smtp.SendMail("smtp.gmail.com:587",
+		smtp.PlainAuth("", from, pass, "smtp.gmail.com"),
+		from, []string{to}, []byte(msg))
+
+	if err != nil {
+		log.Printf("smtp error: %s", err)
+		return
+	}
+
+}
+
+func CambiarPass(w http.ResponseWriter, r *http.Request) {
+	var pruebita Cpass
+	reqBody, _ := ioutil.ReadAll(r.Body)
+
+	json.Unmarshal(reqBody, &pruebita)
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+	w.WriteHeader(http.StatusOK)
+	w.Write([]byte("correo:" + pruebita.Correo))
+	EnviarEmail(" http://localhost:3000/CambiarP", pruebita.Correo)
+
+}
+
+func Pass(w http.ResponseWriter, r *http.Request) {
+	var pruebita passChage
+	reqBody, _ := ioutil.ReadAll(r.Body)
+
+	json.Unmarshal(reqBody, &pruebita)
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+	w.Header().Set("Access-Control-Allow-Methods", "POST, GET, OPTIONS, PUT, DELETE")
+	w.Header().Set("Access-Control-Allow-Headers", "Accept, Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token, Authorization")
+	w.WriteHeader(http.StatusOK)
+
+	db, err := sql.Open("oci8", "TEST/1234@localhost:1521/ORCL18")
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer db.Close()
+
+	res, err := db.Exec("update Usuario set contra = '" + pruebita.Contra + "' where username ='" + pruebita.Username + "'")
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+	fmt.Println(res.LastInsertId())
+
+}
+
 func CargaMasiva(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json")
@@ -406,6 +473,23 @@ func CargaMasiva(w http.ResponseWriter, r *http.Request) {
 	}
 
 }
+
+func Insertar_Usuario(nombre string, pass string, username string, apellido string) {
+	tTime := time.Date(2020, time.January, 9, 10, 5, 2, 0, time.Local)
+	db, err := sql.Open("oci8", "TEST/1234@localhost:1521/ORCL18")
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer db.Close()
+
+	res, err := db.Exec("EXECUTE InsertUser(:1,:2,:3,:4,:5,:6,:7,:8,:9,:10)", username, pass, nombre, apellido, 1, "", tTime.Format("2006/1/_2"), "", "imagenes/"+username, 1)
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+	fmt.Println(res.LastInsertId())
+
+}
 func main() {
 	router := mux.NewRouter().StrictSlash(true)
 	router.HandleFunc("/pruebapost", pruebapost).Methods("POST")
@@ -415,6 +499,8 @@ func main() {
 	router.HandleFunc("/image", CrearImagen).Methods("POST")
 	router.HandleFunc("/obU", ObtenerUsuario).Methods("POST")
 	router.HandleFunc("/update", UpdateUser).Methods("POST")
+	router.HandleFunc("/Cpass", CambiarPass).Methods("POST")
+	router.HandleFunc("/updatepass", Pass).Methods("POST")
 	fmt.Println("Esta funcionando")
 
 	log.Fatal(http.ListenAndServe(":3030", router)) //log.fatal como que lo mantiene a la escucha y permite pararlo
