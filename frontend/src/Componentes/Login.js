@@ -52,7 +52,9 @@ onSubmit = async e =>{
     });
     
     if (Number(res.status) === 200){
+      
       const respuesta = await res.json();
+      console.log(respuesta)
       localStorage.setItem(
         "usuarioActual",
         JSON.stringify({

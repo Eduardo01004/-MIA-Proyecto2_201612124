@@ -1,5 +1,6 @@
 import React, { Component } from 'react'
 import {Link } from 'react-router-dom';
+import './mostrar.css'
 import Swal from "sweetalert2";
 import axios from 'axios';
 export default class Carga extends Component {

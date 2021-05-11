@@ -10,8 +10,11 @@ import (
 	"net/http"
 	"net/smtp"
 	"os"
-	"time"
+	"strconv"
 
+	"github.com/AvraamMavridis/randomcolor"
+	_ "github.com/AvraamMavridis/randomcolor"
+	_ "github.com/godror/godror"
 	"github.com/gorilla/mux"
 	_ "github.com/mattn/go-oci8"
 )
@@ -119,6 +122,27 @@ type passChage struct {
 	Username string `json:"username"`
 	Contra   string `json:"contra"`
 }
+
+type deporte struct {
+	Nombre string `json:"nombre"`
+	Color  string `json:"color"`
+}
+
+type depo struct {
+	Nombre string `json:"nombre"`
+}
+
+type cant struct {
+	Membresia string `json:"membresia"`
+	Temporada string `json:"temporada"`
+}
+
+type ret2 struct {
+	Cantidad int `json:"cantidad"`
+}
+type allDeporte []deporte
+
+var userList = allDeporte{}
 
 /*--------------------------carga masiva---------------*/
 type Resultados struct {
@@ -261,6 +285,11 @@ func Login(w http.ResponseWriter, r *http.Request) {
 	bytes, err := ioutil.ReadFile(foto)
 	if err != nil {
 		println("no se crea la imagen por que no hay")
+		logu.Contra = pass
+		logu.Base = ""
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusOK)
+		json.NewEncoder(w).Encode(logu)
 	} else {
 		var base64Encoding string
 
@@ -286,18 +315,17 @@ func getUsers(w http.ResponseWriter, r *http.Request) {
 	}
 	defer db.Close()
 
-	rows2, err2 := db.Query("select *from Usuario")
+	rows2, err2 := db.Query("select nombre,contra from Usuario")
 	if err2 != nil {
-		log.Fatal("Error fetching user data\n", err)
+		log.Fatal("Error fetching user data\n", err2)
 	}
 	defer rows2.Close()
+
 	for rows2.Next() {
 		var nombre string
 		var contra string
-		rows2.Scan(&nombre)
-		rows2.Scan(&contra)
-		fmt.Println("Usuario " + nombre)
-		fmt.Println("contra " + contra)
+		rows2.Scan(&nombre, &contra)
+		//fmt.Println("Usuario " + nombre + contra)
 	}
 
 }
@@ -369,7 +397,7 @@ func UpdateUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	fmt.Println(res.LastInsertId())
-	w.Write([]byte(pruebita.Base))
+	//w.Write([]byte(pruebita.Base))
 	if pruebita.Base == "" {
 		fmt.Println("NO se cambiara la foto")
 
@@ -461,34 +489,322 @@ func CargaMasiva(w http.ResponseWriter, r *http.Request) {
 	var carga Info
 
 	json.NewDecoder(r.Body).Decode(&carga)
-	for key, element := range carga {
-		fmt.Println("key: " + key)
-		fmt.Println("Usuario:", element.User)
-		fmt.Print("\t")
-		fmt.Println("Clave:", element.Pass)
-		fmt.Print("\t")
-		fmt.Println("Nombre:", element.Nombre)
-		fmt.Print("\t")
-		fmt.Println("Apellido:", element.Apellido)
+	for _, element := range carga {
+		var1 := element.User
+
+		Insertar_Usuario(element.Nombre, element.Pass, element.User, element.Apellido)
+		for _, element := range element.Resultado_ {
+			temporada := element.Temporada
+			insertar_temporada(element.Temporada)
+			insertar_Membresia(var1, element.Tier, element.Temporada)
+			for _, element := range element.Jornadas {
+				jornada := element.Jornada
+				insertar_Jornada(element.Jornada, temporada)
+				for _, element := range element.Evento {
+					var colorInHex string = randomcolor.GetRandomColorInHex()
+					Insertar_deporte(element.Deporte, colorInHex)
+					temp := retornar_Temporada(temporada)
+					//fmt.Println("temporada: " + temp)
+					evento := retornar_Evento(element.Local, element.Visitante, element.Fecha)
+					Insertar_Evento(element.Local, element.Visitante, strconv.Itoa(element.Resultado.Local), strconv.Itoa(element.Resultado.Visitante), element.Fecha, element.Deporte, jornada, temp)
+					Insertar_prediccion(strconv.Itoa(element.Prediccion.Local), strconv.Itoa(element.Prediccion.Visitante), var1, evento)
+
+				}
+
+			}
+		}
 	}
 
 }
 
 func Insertar_Usuario(nombre string, pass string, username string, apellido string) {
-	tTime := time.Date(2020, time.January, 9, 10, 5, 2, 0, time.Local)
+	//t := time.Now()
+	//fecha := fmt.Sprintf("%d-%02d-%02dT",
+	//t.Year(), t.Month(), t.Day())
 	db, err := sql.Open("oci8", "TEST/1234@localhost:1521/ORCL18")
 	if err != nil {
 		log.Fatal(err)
 	}
 	defer db.Close()
 
-	res, err := db.Exec("EXECUTE InsertUser(:1,:2,:3,:4,:5,:6,:7,:8,:9,:10)", username, pass, nombre, apellido, 1, "", tTime.Format("2006/1/_2"), "", "imagenes/"+username, 1)
+	res, err := db.Exec("insert into Usuario(username,contra,nombre,apellido,tiers,fecha_naciemiento,fecha_registro,correo,foto,tipo) values(:1, :2,:3,:4,:5,:6,:7,:8,:9,:10)", username, pass, nombre, apellido, 1, "1-1-1", "1-1-1", "", "imagenes/"+username, 1)
 	if err != nil {
 		fmt.Println(err)
 		return
 	}
 	fmt.Println(res.LastInsertId())
 
+}
+
+func insertar_temporada(nombre string) {
+	db, err := sql.Open("oci8", "TEST/1234@localhost:1521/ORCL18")
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer db.Close()
+
+	res, err := db.Exec("insert into Temporada(nombre) values(:1)", nombre)
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+	fmt.Println(res.LastInsertId())
+
+}
+
+func insertar_Membresia(usuario string, tipo string, temp string) {
+	db, err := sql.Open("oci8", "TEST/1234@localhost:1521/ORCL18")
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer db.Close()
+
+	res, err := db.Exec(
+		"INSERT INTO Temporada_Membresia (id_usuario, id_membresia, id_temporada)" +
+			"VALUES (" +
+			"(SELECT usuario.id_usuario from Usuario where Usuario.username = '" + usuario + "')," +
+			"(SELECT membresia.id_membresia from Membresia where Membresia.nombre = '" + tipo + "')," +
+			"(SELECT temporada.id_temporada from Temporada where Temporada.nombre = '" + temp + "')" +
+			")")
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+	fmt.Println(res.LastInsertId())
+
+}
+
+func insertar_Jornada(nombre string, temp string) {
+	db, err := sql.Open("oci8", "TEST/1234@localhost:1521/ORCL18")
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer db.Close()
+
+	rows2, err2 := db.Query("BEGIN insert_jornada('" + nombre + "', '" + temp + "');END;")
+
+	if err2 != nil {
+		fmt.Println(err2)
+		return
+	}
+	defer rows2.Close()
+
+}
+
+func Insertar_deporte(nombre string, color string) {
+	db, err := sql.Open("oci8", "TEST/1234@localhost:1521/ORCL18")
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer db.Close()
+
+	res, err := db.Exec("insert into Deporte(nombre,color) values(:1, :2)", nombre, color)
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+	fmt.Println(res.LastInsertId())
+
+}
+func Insertar_deporteM(w http.ResponseWriter, r *http.Request) {
+	var dep depo
+	reqBody, _ := ioutil.ReadAll(r.Body)
+	json.Unmarshal(reqBody, &dep)
+	db, err := sql.Open("oci8", "TEST/1234@localhost:1521/ORCL18")
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer db.Close()
+	var colorInHex string = randomcolor.GetRandomColorInHex()
+	res, err := db.Exec("insert into Deporte(nombre,color) values(:1, :2)", dep.Nombre, colorInHex)
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+	fmt.Println(res.LastInsertId())
+
+}
+
+func Insertar_Evento(Elocal string, Evisitante string, Rlocal string, Rvisitante string, fecha string, deporte string, jornada string, temp string) {
+	db, err := sql.Open("oci8", "TEST/1234@localhost:1521/ORCL18")
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer db.Close()
+
+	res, err := db.Exec("BEGIN insert_evento('" + Elocal + "', '" + Evisitante + "', '" + Rlocal + "', '" + Rvisitante + "', '" + fecha + "', '" + deporte + "', '" + jornada + "', '" + temp + "');END;")
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+	fmt.Println(res.LastInsertId())
+
+}
+
+func Insertar_prediccion(local string, visitante string, user string, evento string) {
+	db, err := sql.Open("oci8", "TEST/1234@localhost:1521/ORCL18")
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer db.Close()
+
+	res, err := db.Exec("BEGIN Insert_Prediccion('" + local + "', '" + visitante + "', '" + evento + "','" + user + "');END;")
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+	fmt.Println(res.LastInsertId())
+
+}
+
+/*--------------PETICIONES GET----------------*/
+func Mostrar_deporte(w http.ResponseWriter, r *http.Request) {
+	var depor deporte
+	db, err := sql.Open("oci8", "TEST/1234@localhost:1521/ORCL18")
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+	defer db.Close()
+
+	rows2, err2 := db.Query("SELECT nombre,color from Deporte")
+	if err2 != nil {
+		fmt.Println(err2)
+		return
+	}
+	defer rows2.Close()
+	userList = allDeporte{}
+	var depo string
+	var color string
+	//rows2.Scan(&color)
+	//println("color" + color)
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+
+	for rows2.Next() {
+		rows2.Scan(&depo, &color)
+		depor.Nombre = depo
+		depor.Color = color
+		println("color" + color)
+		userList = append(userList, depor)
+	}
+	json.NewEncoder(w).Encode(userList)
+}
+
+func Mostrar_Tiers(w http.ResponseWriter, r *http.Request) {
+	var c cant
+	var ret ret2
+	reqBody, _ := ioutil.ReadAll(r.Body)
+	json.Unmarshal(reqBody, &c)
+
+	db, err := sql.Open("oci8", "TEST/1234@localhost:1521/ORCL18")
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer db.Close()
+	var cant int
+
+	var err2 error
+	err2 = db.QueryRow("select count(Usuario.id_usuario)  as Cantidad " +
+		" from Usuario " +
+		" inner join  Temporada_Membresia  on Usuario.id_usuario = Temporada_Membresia.id_usuario " +
+		" inner join  Membresia on Temporada_Membresia.id_membresia = Membresia.id_membresia " +
+		" inner join  Temporada on Temporada_Membresia.id_Temporada = Temporada.id_temporada " +
+		" where Membresia.nombre = '" + c.Membresia + "' and  Temporada.nombre = '" + c.Temporada + "'").Scan(&cant)
+
+	if err2 != nil {
+		http.Error(w, err2.Error(), http.StatusInternalServerError)
+		return
+	}
+	w.Header().Set("Content-Type", "application/json")
+	ret.Cantidad = cant
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(ret)
+
+}
+
+/*---------------peticiones delete--------------*/
+func delete_Deporte(w http.ResponseWriter, r *http.Request) {
+	var d depo
+	reqBody, _ := ioutil.ReadAll(r.Body)
+
+	json.Unmarshal(reqBody, &d)
+
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+	w.Header().Set("Access-Control-Allow-Methods", "POST, GET, OPTIONS, PUT, DELETE")
+	w.Header().Set("Access-Control-Allow-Headers", "Accept, Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token, Authorization")
+	w.WriteHeader(http.StatusOK)
+	//w.Write([]byte(pruebita.Base)) //----devuelvo el username en el response del POST
+	db, err := sql.Open("oci8", "TEST/1234@localhost:1521/ORCL18")
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer db.Close()
+
+	res, err := db.Exec("delete from Deporte where  nombre = '" + d.Nombre + "'")
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+	fmt.Println(res.LastInsertId())
+
+}
+
+func retornar_Temporada(nombreL string) (consulta string) {
+	db, err := sql.Open("oci8", "TEST/1234@localhost:1521/ORCL18")
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+
+	defer db.Close()
+
+	rows, err := db.Query("SELECT id_temporada FROM Temporada WHERE nombre = :1",
+		nombreL)
+
+	if err != nil {
+		fmt.Println("retorno de evento")
+		fmt.Println("Error running query")
+		fmt.Println(err)
+		return
+	}
+	defer rows.Close()
+
+	var x int
+	for rows.Next() {
+		rows.Scan(&x)
+		consulta = strconv.Itoa(x)
+	}
+	return consulta
+}
+
+func retornar_Evento(nombreL string, nombreV string, fecha string) (consulta string) {
+	db, err := sql.Open("oci8", "TEST/1234@localhost:1521/ORCL18")
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+
+	defer db.Close()
+
+	rows, err := db.Query("SELECT id_evento FROM Evento where Elocal = :1 and Evisitante = :2 and TO_CHAR(fecha,'DD/MM/YYYY HH24:MI') = :3",
+		nombreL, nombreV, fecha)
+
+	if err != nil {
+		fmt.Println("retorno de evento")
+		fmt.Println("Error running query")
+		fmt.Println(err)
+		return
+	}
+	defer rows.Close()
+
+	var x int
+	for rows.Next() {
+		rows.Scan(&x)
+		consulta = strconv.Itoa(x)
+	}
+	fmt.Println(strconv.Itoa(x))
+	return consulta
 }
 func main() {
 	router := mux.NewRouter().StrictSlash(true)
@@ -501,6 +817,13 @@ func main() {
 	router.HandleFunc("/update", UpdateUser).Methods("POST")
 	router.HandleFunc("/Cpass", CambiarPass).Methods("POST")
 	router.HandleFunc("/updatepass", Pass).Methods("POST")
+	router.HandleFunc("/agregarDeporte", Insertar_deporteM).Methods("POST")
+	router.HandleFunc("/eliminarDeporte", delete_Deporte).Methods("POST")
+	router.HandleFunc("/getTier", Mostrar_Tiers).Methods("POST")
+	router.HandleFunc("/getdeporte", Mostrar_deporte).Methods("POST")
+
+	/*----------------gets-------*/
+
 	fmt.Println("Esta funcionando")
 
 	log.Fatal(http.ListenAndServe(":3030", router)) //log.fatal como que lo mantiene a la escucha y permite pararlo

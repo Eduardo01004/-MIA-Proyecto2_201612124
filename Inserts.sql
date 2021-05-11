@@ -4,3 +4,5 @@ BEGIN
     INSERT INTO Usuario (username,contra,nombre,apellido,tiers,fecha_naciemiento,fecha_registro,correo,foto,tipo)
     VALUES (username,contra,nameu,apellido,tiers,fecha_nac,fechaReg,correo,foto,tipo);
 END;
+
+EXECUTE InsertUser ('CACA','pene','lulu','top',3,'1-1-1','11-1-1','sadfsd@gdsg.com','image/sda',1);

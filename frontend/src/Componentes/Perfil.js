@@ -21,7 +21,6 @@ export default class Perfil extends Component {
               },
           {headers}
           ).then(response => {
-            //const cas = response.json();
               this.setState({
                 username: response.data.username,
                 contra:   response.data.contra,
@@ -33,8 +32,6 @@ export default class Perfil extends Component {
                 correo: response.data.correo,
                 foto: "/home/eduardo/go/src/imagenes/Eduardo21.JPEG",
                 base64 : tp.base64
-                
-   
             })
             
             console.log("Succes ========>", response)
