@@ -140,9 +140,48 @@ type cant struct {
 type ret2 struct {
 	Cantidad int `json:"cantidad"`
 }
+
+type EventCalendar struct {
+	Id    string `json:"id"`
+	Title string `json:"title"`
+	Start string `json:"start"`
+}
+type Calendar struct {
+	Eventos []EventCalendar `json:"Eventos"`
+}
+type Contiene map[string]Calendar
+
+type Recompensa struct {
+	Username string `json:"username"`
+	Nombre   string `json:"nombre"`
+	Apellido string `json:"apellido"`
+	Tier     string `json:"tier"`
+}
+
+type Temporada struct {
+	Deporte     string `json:"deporte"`
+	Local       string `json:"local"`
+	Visitante   string `json:"visitante"`
+	PrediccionL int    `json:"Pl"`
+	PrediccionV int    `json:"Pv"`
+	ResultadoL  int    `json:"Rl"`
+	ResultadoV  int    `json:"Rv"`
+	Fecha       string `json:fecha"`
+}
+
+type envTemp struct {
+	Username  string `json:"username`
+	Temporada string `json:"temporada`
+}
 type allDeporte []deporte
+type allevents []EventCalendar
+type allRecompensa []Recompensa
+type allTemporada []Temporada
+
+var eventList = allevents{}
 
 var userList = allDeporte{}
+var recoList = allRecompensa{}
 
 /*--------------------------carga masiva---------------*/
 type Resultados struct {
@@ -723,6 +762,143 @@ func Mostrar_Tiers(w http.ResponseWriter, r *http.Request) {
 
 }
 
+func Mostrar_Evento(w http.ResponseWriter, r *http.Request) {
+	var evt EventCalendar
+	db, err := sql.Open("oci8", "TEST/1234@localhost:1521/ORCL18")
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+	defer db.Close()
+
+	rows2, err2 := db.Query("SELECT id_evento,Elocal,Evisitante,Rlocal,Rvisitante,fecha from Evento")
+	if err2 != nil {
+		fmt.Println(err2)
+		return
+	}
+	defer rows2.Close()
+	var eventList = allevents{}
+	var id int
+	var Elocal string
+	var evisita string
+	var rlocal int
+	var rvisita int
+	var fecha string
+
+	//rows2.Scan(&color)
+	//println("color" + color)
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+
+	for rows2.Next() {
+		rows2.Scan(&id, &Elocal, &evisita, &rlocal, &rvisita, &fecha)
+		evt.Id = strconv.Itoa(id)
+		evt.Title = Elocal + " contra " + evisita + " Resultado: " + strconv.Itoa(rlocal) + " - " + strconv.Itoa(rvisita)
+		evt.Start = fecha
+		eventList = append(eventList, evt)
+	}
+	json.NewEncoder(w).Encode(eventList)
+
+}
+
+func Mostrar_Recompensa(w http.ResponseWriter, r *http.Request) {
+	var rec Recompensa
+	db, err := sql.Open("oci8", "TEST/1234@localhost:1521/ORCL18")
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+	defer db.Close()
+
+	rows2, err2 := db.Query("select distinct Usuario.username, Usuario.nombre, Usuario.apellido, Membresia.nombre" +
+		" from Usuario " +
+		" inner join Temporada_Membresia on Usuario.id_usuario = Temporada_Membresia.id_usuario " +
+		" inner join Membresia on Temporada_Membresia.id_membresia = Membresia.id_membresia " +
+		" inner join  Temporada on Temporada_Membresia.id_Temporada = Temporada.id_temporada " +
+		"order by Usuario.nombre Asc")
+	if err2 != nil {
+		fmt.Println(err2)
+		return
+	}
+	defer rows2.Close()
+	//var eventList = allevents{}
+	var recoList = allRecompensa{}
+	var username string
+	var nombre string
+	var apellido string
+	var tier string
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+
+	for rows2.Next() {
+		rows2.Scan(&username, &nombre, &apellido, &tier)
+		rec.Username = username
+		rec.Nombre = nombre
+		rec.Apellido = apellido
+		rec.Tier = tier
+
+		recoList = append(recoList, rec)
+	}
+	json.NewEncoder(w).Encode(recoList)
+
+}
+
+func Mostrar_temporada(w http.ResponseWriter, r *http.Request) {
+	var temp Temporada
+	var t envTemp
+
+	reqBody, _ := ioutil.ReadAll(r.Body)
+	json.Unmarshal(reqBody, &t)
+
+	db, err := sql.Open("oci8", "TEST/1234@localhost:1521/ORCL18")
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+	defer db.Close()
+
+	rows2, err2 := db.Query(" select Deporte.nombre, Evento.Elocal, Evento.Evisitante, Prediccion.Plocal, Prediccion.Pvisitante, Evento.Rlocal, Evento.Rvisitante,to_char(Evento.fecha, 'YYYY-MM-DD HH24:MI')"+
+		" from Deporte, Evento, Prediccion, Temporada,Jornada,Usuario "+
+		" where Temporada.id_temporada = Jornada.id_temporada and Evento.id_jornada = Jornada.id_jornada "+
+		" and Deporte.id_deporte = Evento.id_deporte and Evento.id_evento = Prediccion.id_evento "+
+		" and Usuario.id_usuario = Prediccion.id_usuario "+
+		" and Usuario.username = :1 and Temporada.nombre = :2", t.Username, t.Temporada)
+	if err2 != nil {
+		fmt.Println(err2)
+		return
+	}
+	defer rows2.Close()
+	var tempList = allTemporada{}
+	var deporte string
+	var Elocal string
+	var Evisitante string
+	var Plocal int
+	var Pvisitante int
+	var rlocal int
+	var rvisita int
+	var fecha string
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+
+	for rows2.Next() {
+		rows2.Scan(&deporte, &Elocal, &Evisitante, &Plocal, &Pvisitante, &rlocal, &rvisita, &fecha)
+		temp.Deporte = deporte
+		temp.Local = Elocal
+		temp.Visitante = Evisitante
+		temp.PrediccionL = Plocal
+		temp.PrediccionV = Pvisitante
+		temp.ResultadoL = rlocal
+		temp.ResultadoV = rvisita
+		temp.Fecha = fecha
+		//println("deporte: " + deporte)
+		tempList = append(tempList, temp)
+	}
+	json.NewEncoder(w).Encode(tempList)
+
+}
+
 /*---------------peticiones delete--------------*/
 func delete_Deporte(w http.ResponseWriter, r *http.Request) {
 	var d depo
@@ -821,6 +997,9 @@ func main() {
 	router.HandleFunc("/eliminarDeporte", delete_Deporte).Methods("POST")
 	router.HandleFunc("/getTier", Mostrar_Tiers).Methods("POST")
 	router.HandleFunc("/getdeporte", Mostrar_deporte).Methods("POST")
+	router.HandleFunc("/getEvento", Mostrar_Evento).Methods("POST")
+	router.HandleFunc("/getrecompensa", Mostrar_Recompensa).Methods("POST")
+	router.HandleFunc("/getTemporada", Mostrar_temporada).Methods("POST")
 
 	/*----------------gets-------*/
 

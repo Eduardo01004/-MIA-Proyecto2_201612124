@@ -12,8 +12,11 @@ import Cambiar from './Componentes/CambiarPass';
 import Mostrar from './Componentes/MostrarDeporte';
 import Jornadas from './Componentes/Jornadas';
 import Recompensa from './Componentes/Recompensa';
+import Temporada from './Componentes/Temporada';
+import EventoU from './Componentes/EventosU';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import {  BrowserRouter as Router, Switch, Route} from 'react-router-dom';
+
 function App() {
   return (
     <Router>
@@ -35,6 +38,8 @@ function App() {
             <Route path="/MostrarD" component={Mostrar} />
             <Route path="/Jornadas" component={Jornadas} />
             <Route path="/Recompensa" component={Recompensa} />
+            <Route path="/EventoU" component={EventoU} />
+            <Route path="/Temporada" component={Temporada} />
           </Switch>
         </div>
       </div>

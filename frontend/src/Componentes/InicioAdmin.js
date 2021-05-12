@@ -99,7 +99,7 @@ Buscar = async e =>{
       
         return (
           
-            <div className="App">
+          <div className="App">
             <nav className="navbar navbar-expand-lg navbar-light fixed-top">
               <div className="container">
                 <Link className="navbar-brand" to={"/sign-in"}>Quiniela APP</Link>
@@ -112,10 +112,10 @@ Buscar = async e =>{
                       <Link className="nav-link" to={"/Jornadas"}>Jornadas</Link>
                     </li>
                     <li className="nav-item">
-                      <Link className="nav-link" to={"/sign-up"}>Temporada</Link>
+                      <Link className="nav-link" to={"/Temporada"}>Temporada</Link>
                     </li>
                     <li className="nav-item">
-                      <Link className="nav-link" to={"/Recompensa"}>Recompensas</Link>
+                      <Link className="nav-link" to={"/Recompesa"}>Recompensas</Link>
                     </li>
                     <li className="nav-item">
                       <Link className="nav-link" to={"/MostrarD"}>Deportes</Link>

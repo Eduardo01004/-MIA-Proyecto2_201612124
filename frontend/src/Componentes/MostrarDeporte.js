@@ -73,49 +73,45 @@ export default class MostrarDeporte extends Component {
             }
             )
     }
-
-
-
     render() {
         return (
 
-            <div className="App">
-            <nav className="navbar navbar-expand-lg navbar-light fixed-top">
-              <div className="container">
-                <Link className="navbar-brand" to={"/sign-in"}>Quiniela APP</Link>
-                <div className="collapse navbar-collapse" id="navbarTogglerDemo02">
-                  <ul className="navbar-nav ml-auto">
-                    <li className="nav-item">
-                      <Link className="nav-link" to={"/carga"}>Carga Masiva</Link>
-                    </li>
-                    <li className="nav-item">
-                      <Link className="nav-link" to={"/sign-up"}>Jornadas</Link>
-                    </li>
-                    <li className="nav-item">
-                      <Link className="nav-link" to={"/sign-up"}>Temporada</Link>
-                    </li>
-                    <li className="nav-item">
-                      <Link className="nav-link" to={"/sign-up"}>Recompensas</Link>
-                    </li>
-                    <li className="nav-item">
-                      <Link className="nav-link" to={"/sign-up"}>Deportes</Link>
-                    </li>
-                    <li className="nav-item">
-                      <Link className="nav-link" to={"/sign-up"}>Reportes</Link>
-                    </li>
-                  </ul>
-                </div>
+          <div className="App">
+          <nav className="navbar navbar-expand-lg navbar-light fixed-top">
+            <div className="container">
+              <Link className="navbar-brand" to={"/sign-in"}>Quiniela APP</Link>
+              <div className="collapse navbar-collapse" id="navbarTogglerDemo02">
+                <ul className="navbar-nav ml-auto">
+                  <li className="nav-item">
+                    <Link className="nav-link" to={"/carga"}>Carga Masiva</Link>
+                  </li>
+                  <li className="nav-item">
+                    <Link className="nav-link" to={"/Jornadas"}>Jornadas</Link>
+                  </li>
+                  <li className="nav-item">
+                    <Link className="nav-link" to={"/Temporada"}>Temporada</Link>
+                  </li>
+                  <li className="nav-item">
+                    <Link className="nav-link" to={"/Recompensa"}>Recompensas</Link>
+                  </li>
+                  <li className="nav-item">
+                    <Link className="nav-link" to={"/MostrarD"}>Deportes</Link>
+                  </li>
+                  <li className="nav-item">
+                    <Link className="nav-link" to={"/sign-up"}>Reportes</Link>
+                  </li>
+                </ul>
               </div>
-            </nav>
+            </div>
+          </nav>
             
             <div className = "row">
             <ul className="list-group list-group-vertical">
+            
                         {
                             this.state.deportes.map(nombre => (
                             <li className="list-group-item list-group-item-action" 
-                            key={nombre.id}
-                            
-                            >
+                            key={nombre.id}>
                                 {nombre.nombre}
                             </li>
                             )
@@ -123,6 +119,8 @@ export default class MostrarDeporte extends Component {
                             
                         } 
                     </ul>
+
+
                     <ul class="list-group list-group-vertical-">
                     {
                             this.state.deportes.map(nombre => (
@@ -165,6 +163,8 @@ export default class MostrarDeporte extends Component {
 
                     </ul>
             </div>
+
+
             <div className="form-group">
                 <label>Ingrese un Deporte</label>
                 <input type="text" className="form-control" placeholder="Deporte" onChange={this.onChangeDeporte}/>

@@ -267,6 +267,12 @@ inner join Temporada_Membresia on Usuario.id_usuario = Temporada_Membresia.id_us
 inner join Membresia on Temporada_Membresia.id_membresia = Membresia.id_membresia
 inner join  Temporada on Temporada_Membresia.id_Temporada = Temporada.id_temporada 
 order by Usuario.nombre Asc;
+
+select Deporte.nombre, Evento.Elocal, Evento.Evisitante, Prediccion.Plocal, Prediccion.Pvisitante, Evento.Rlocal,Evento.Rvisitante,to_char(Evento.fecha, 'YYYY-MM-DD HH24:MI') as Fecha
+from Deporte, Evento, Prediccion, Temporada,Jornada,Usuario
+where Temporada.id_temporada = Jornada.id_temporada and Evento.id_jornada = Jornada.id_jornada
+and Deporte.id_deporte = Evento.id_deporte and Evento.id_evento = Prediccion.id_evento
+and Usuario.id_usuario = Prediccion.id_usuario and Usuario.username = 'jpook0@army.mil' and Temporada.nombre = '2018-Q3';
 /*-----------PROCEDIMIENTOS-------------*/
 
 create or replace procedure Mostrar_tiers(tie in varchar2, temp in varchar2)
